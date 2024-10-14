@@ -8,6 +8,10 @@ import {
   mockAdminUser,
   mockFranchiseAdminEndpoint,
   mockDeleteFranchiseEndpoint,
+  mockFranchiseeUserEndpoint,
+  mockFranchiseFranchiseeEndpoint,
+  mockCreateNewStoreEndpoint,
+  mockDocsEndpoint,
 } from "./mocks/endpoints";
 
 test.describe("JWT Pizza", () => {
@@ -345,5 +349,123 @@ test.describe("JWT Pizza", () => {
       "homeadmin-dashboardclose-franchise"
     );
     await page.getByRole("button", { name: "Close" }).click();
+  });
+
+  test("test franchisee dashboard", async ({ page }) => {
+    await mockFranchiseeUserEndpoint(page);
+    await mockFranchiseAdminEndpoint(page);
+
+    // login as franchisee
+    await page.getByRole("link", { name: "Login" }).click();
+    await page.getByPlaceholder("Email address").click();
+    await page.getByPlaceholder("Email address").fill("franchisee@jwt.com");
+    await page.getByPlaceholder("Email address").press("Tab");
+    await page.getByPlaceholder("Password").fill("f");
+    await page.getByRole("button", { name: "Login" }).click();
+
+    // franchisee dashboard
+    await expect(page.locator("#navbar-dark")).toContainText("Franchise");
+    await page
+      .getByLabel("Global")
+      .getByRole("link", { name: "Franchise" })
+      .click();
+    await expect(page.getByRole("main")).toContainText(
+      "So you want a piece of the pie?"
+    );
+    await expect(page.getByRole("list")).toContainText(
+      "homefranchise-dashboard"
+    );
+    await expect(
+      page
+        .locator("div")
+        .filter({
+          hasText:
+            /^If you are already a franchisee, pleaseloginusing your franchise account$/,
+        })
+        .nth(1)
+    ).toBeVisible();
+    await expect(page.getByRole("main")).toContainText("Call now800-555-5555");
+    await expect(page.getByRole("main").locator("img")).toBeVisible();
+    await expect(page.locator("thead")).toContainText("Year");
+    await expect(page.locator("thead")).toContainText("Profit");
+    await expect(page.locator("thead")).toContainText("Costs");
+    await expect(page.locator("thead")).toContainText("Franchise Fee");
+    await expect(page.locator("tbody")).toContainText("2020");
+    await expect(page.locator("tbody")).toContainText("150 ₿");
+    await expect(page.locator("tbody")).toContainText("600 ₿");
+    await expect(page.locator("tbody")).toContainText("50 ₿");
+    await page.getByRole("link", { name: "login" }).click();
+  });
+
+  test("test create new store", async ({ page }) => {
+    await mockFranchiseeUserEndpoint(page);
+    await mockFranchiseFranchiseeEndpoint(page);
+    await mockCreateNewStoreEndpoint(page);
+
+    // login as franchisee
+    await page.getByRole("link", { name: "Login" }).click();
+    await page.getByPlaceholder("Email address").click();
+    await page.getByPlaceholder("Email address").fill("franchisee@jwt.com");
+    await page.getByPlaceholder("Email address").press("Tab");
+    await page.getByPlaceholder("Password").fill("f");
+    await page.getByRole("button", { name: "Login" }).click();
+
+    // franchisee dashboard
+    await expect(page.locator("#navbar-dark")).toContainText("Franchise");
+    await page
+      .getByLabel("Global")
+      .getByRole("link", { name: "Franchise" })
+      .click();
+
+    await page.getByRole("button", { name: "Create store" }).click();
+    await expect(page.getByRole("list")).toContainText(
+      "homefranchise-dashboardcreate-store"
+    );
+    await expect(page.getByRole("heading")).toContainText("Create store");
+    await expect(page.getByPlaceholder("store name")).toBeVisible();
+    await page.getByPlaceholder("store name").click();
+    await page.getByPlaceholder("store name").fill("new store");
+    await expect(page.getByRole("button", { name: "Create" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
+    await page.getByRole("button", { name: "Create" }).click();
+  });
+
+  test("test docs", async ({ page }) => {
+    //await mockDocsEndpoint(page);
+    await page.goto("http://localhost:5173/docs");
+    await expect(page.getByRole("main")).toContainText("JWT Pizza API");
+    await expect(page.getByText("[POST] /api/authRegister a")).toBeVisible();
+    await expect(page.getByText("[PUT] /api/authLogin existing")).toBeVisible();
+    await expect(
+      page.getByText(
+        "🔐 [PUT] /api/auth/:userIdUpdate userExample requestcurl -X PUT localhost:3000/"
+      )
+    ).toBeVisible();
+    await expect(page.getByText("🔐 [DELETE] /api/authLogout a")).toBeVisible();
+    await expect(page.getByText("[GET] /api/order/menuGet the")).toBeVisible();
+    await expect(page.getByText("🔐 [PUT] /api/order/menuAdd")).toBeVisible();
+    await expect(page.getByText("🔐 [GET] /api/orderGet the")).toBeVisible();
+    await expect(page.getByRole("main")).toContainText(
+      '🔐 [POST] /api/orderCreate a order for the authenticated userExample requestcurl -X POST localhost:3000/api/order -H \'Content-Type: application/json\' -d \'{"franchiseId": 1, "storeId":1, "items":[{ "menuId": 1, "description": "Veggie", "price": 0.05 }]}\' -H \'Authorization: Bearer tttttt\'Response{ "order": { "franchiseId": 1, "storeId": 1, "items": [ { "menuId": 1, "description": "Veggie", "price": 0.05 } ], "id": 1 }, "jwt": "1111111111" }'
+    );
+    await expect(page.getByRole("main")).toContainText(
+      '[GET] /api/franchiseList all the franchisesExample requestcurl localhost:3000/api/franchiseResponse[ { "id": 1, "name": "pizzaPocket", "stores": [ { "id": 1, "name": "SLC" } ] } ]'
+    );
+
+    await expect(page.getByRole("main")).toContainText(
+      '🔐 [GET] /api/franchise/:userIdList a user\'s franchisesExample requestcurl localhost:3000/api/franchise/4 -H \'Authorization: Bearer tttttt\'Response[ { "id": 2, "name": "pizzaPocket", "admins": [ { "id": 4, "name": "pizza franchisee", "email": "f@jwt.com" } ], "stores": [ { "id": 4, "name": "SLC", "totalRevenue": 0 } ] } ]'
+    );
+    await expect(page.getByRole("main")).toContainText(
+      '🔐 [POST] /api/franchiseCreate a new franchiseExample requestcurl -X POST localhost:3000/api/franchise -H \'Content-Type: application/json\' -H \'Authorization: Bearer tttttt\' -d \'{"name": "pizzaPocket", "admins": [{"email": "f@jwt.com"}]}\'Response{ "name": "pizzaPocket", "admins": [ { "email": "f@jwt.com", "id": 4, "name": "pizza franchisee" } ], "id": 1 }'
+    );
+    await expect(page.getByRole("main")).toContainText(
+      '🔐 [DELETE] /api/franchise/:franchiseIdDelete a franchisesExample requestcurl -X DELETE localhost:3000/api/franchise/1 -H \'Authorization: Bearer tttttt\'Response{ "message": "franchise deleted" }'
+    );
+    await expect(page.getByRole("main")).toContainText(
+      '🔐 [POST] /api/franchise/:franchiseId/storeCreate a new franchise storeExample requestcurl -X POST localhost:3000/api/franchise/1/store -H \'Content-Type: application/json\' -d \'{"franchiseId": 1, "name":"SLC"}\' -H \'Authorization: Bearer tttttt\'Response{ "id": 1, "franchiseId": 1, "name": "SLC" }'
+    );
+    await expect(page.getByRole("main")).toContainText(
+      '🔐 [DELETE] /api/franchise/:franchiseId/store/:storeIdDelete a storeExample requestcurl -X DELETE localhost:3000/api/franchise/1/store/1 -H \'Authorization: Bearer tttttt\'Response{ "message": "store deleted" }'
+    );
   });
 });
