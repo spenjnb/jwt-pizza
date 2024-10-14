@@ -6,8 +6,8 @@ import {
   mockOrderEndpoint,
   mockRegisterEndpoint,
   mockAdminUser,
-  mockCreateNewFranchiseEndpoint,
-  mockListAllFranchisesEndpoint,
+  mockFranchiseAdminEndpoint,
+  mockDeleteFranchiseEndpoint,
 } from "./mocks/endpoints";
 
 test.describe("JWT Pizza", () => {
@@ -94,6 +94,20 @@ test.describe("JWT Pizza", () => {
 
     // Check balance
     await expect(page.getByText("0.008")).toBeVisible();
+  });
+
+  test("test logout", async ({ page }) => {
+    await mockAuthEndpoint(page);
+
+    await page.getByRole("link", { name: "Login" }).click();
+    await page.getByPlaceholder("Email address").click();
+    await page.getByPlaceholder("Email address").fill("d@jwt.com");
+    await page.getByPlaceholder("Email address").press("Tab");
+    await page.getByPlaceholder("Password").fill("a");
+    await page.getByRole("button", { name: "Login" }).click();
+
+    await page.getByRole("link", { name: "Logout" }).click();
+    await expect(page.locator("#navbar-dark")).toContainText("Login");
   });
 
   test("test main elements", async ({ page }) => {
@@ -228,11 +242,19 @@ test.describe("JWT Pizza", () => {
     await expect(page.getByRole("button")).toContainText("Add Franchise");
     await page.getByRole("button", { name: "Add Franchise" }).click();
     await expect(page.locator("#navbar-dark")).toContainText("Admin");
+
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("row")).toContainText("Franchise");
+    await expect(page.getByRole("row")).toContainText("Franchisee");
+    await expect(page.getByRole("row")).toContainText("Store");
+    await expect(page.getByRole("row")).toContainText("Revenue");
+    await expect(page.getByRole("row")).toContainText("Action");
+    await expect(page.locator("#navbar-dark")).toContainText("Logout");
   });
 
   test("test create franchise", async ({ page }) => {
     await mockAdminUser(page);
-    await mockListAllFranchisesEndpoint(page);
+    await mockFranchiseAdminEndpoint(page);
 
     // login as admin
     await page.getByRole("link", { name: "Login" }).click();
@@ -271,5 +293,57 @@ test.describe("JWT Pizza", () => {
     await page.getByPlaceholder("franchisee admin email").fill("frank@jwt.com");
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
     await page.getByRole("button", { name: "Create" }).click();
+  });
+
+  test("test close franchise", async ({ page }) => {
+    await mockAdminUser(page);
+    await mockFranchiseAdminEndpoint(page);
+    await mockDeleteFranchiseEndpoint(page);
+
+    // login as admin
+    await page.getByRole("link", { name: "Login" }).click();
+    await page.getByPlaceholder("Email address").click();
+    await page.getByPlaceholder("Email address").fill("frank@jwt.com");
+    await page.getByPlaceholder("Email address").press("Tab");
+    await page.getByPlaceholder("Password").fill("b");
+    await page.getByRole("button", { name: "Login" }).click();
+
+    // admin dashboard
+    await page.getByRole("link", { name: "Admin" }).click();
+
+    await expect(page.getByRole("heading")).toContainText(
+      "Mama Ricci's kitchen"
+    );
+
+    await expect(
+      page
+        .getByRole("row", { name: "LotaPizza Frank franchise" })
+        .getByRole("button")
+    ).toBeVisible();
+    await expect(
+      page.getByRole("row", { name: "Lehi 0.9 ₿ Close" }).getByRole("button")
+    ).toBeVisible();
+    await expect(page.getByRole("table")).toContainText("LotaPizza");
+    await expect(page.getByRole("table")).toContainText("PizzaCorp");
+    await expect(page.getByRole("table")).toContainText("topSpot");
+    await expect(page.getByRole("table")).toContainText("Kai franchise");
+    await expect(page.getByRole("table")).toContainText("American Fork");
+    await expect(page.getByRole("table")).toContainText("0.8 ₿");
+    await page
+      .getByRole("row", { name: "topSpot Ryan franchise Close" })
+      .getByRole("button")
+      .click();
+
+    await expect(page.getByRole("main")).toContainText(
+      "Are you sure you want to close the topSpot franchise? This will close all associated stores and cannot be restored. All outstanding revenue with not be refunded."
+    );
+    await expect(page.getByRole("heading")).toContainText(
+      "Sorry to see you go"
+    );
+    await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
+    await expect(page.getByRole("list")).toContainText(
+      "homeadmin-dashboardclose-franchise"
+    );
+    await page.getByRole("button", { name: "Close" }).click();
   });
 });

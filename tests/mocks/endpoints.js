@@ -1,28 +1,5 @@
 import { expect } from "@playwright/test";
 
-export async function mockMenuEndpoint(page) {
-  await page.route("*/**/api/order/menu", async (route) => {
-    const menuRes = [
-      {
-        id: 1,
-        title: "Veggie",
-        image: "pizza1.png",
-        price: 0.0038,
-        description: "A garden of delight",
-      },
-      {
-        id: 2,
-        title: "Pepperoni",
-        image: "pizza2.png",
-        price: 0.0042,
-        description: "Spicy treat",
-      },
-    ];
-    expect(route.request().method()).toBe("GET");
-    await route.fulfill({ json: menuRes });
-  });
-}
-
 // Mock the franchise endpoint
 export async function mockFranchiseEndpoint(page) {
   await page.route("*/**/api/franchise", async (route) => {
@@ -44,7 +21,7 @@ export async function mockFranchiseEndpoint(page) {
   });
 }
 
-export async function mockListAllFranchisesEndpoint(page) {
+export async function mockFranchiseAdminEndpoint(page) {
   await page.route("*/**/api/franchise", async (route) => {
     const method = route.request().method();
     if (method === "GET") {
@@ -102,21 +79,37 @@ export async function mockCreateNewFranchiseEndpoint(page) {
   });
 }
 
+export async function mockDeleteFranchiseEndpoint(page) {
+  await page.route("*/**/api/franchise/4", async (route) => {
+    const deleteFranchiseRes = { message: "franchise deleted" };
+    expect(route.request().method()).toBe("DELETE");
+    await route.fulfill({ json: deleteFranchiseRes });
+  });
+}
+
+// Mock auth endpoint (login, register, logout)
 export async function mockAuthEndpoint(page) {
   await page.route("*/**/api/auth", async (route) => {
-    const loginReq = { email: "d@jwt.com", password: "a" };
-    const loginRes = {
-      user: {
-        id: 3,
-        name: "Kai Chen",
-        email: "d@jwt.com",
-        roles: [{ role: "diner" }],
-      },
-      token: "abcdef",
-    };
-    expect(route.request().method()).toBe("PUT");
-    expect(route.request().postDataJSON()).toMatchObject(loginReq);
-    await route.fulfill({ json: loginRes });
+    const method = route.request().method();
+    if (method === "PUT") {
+      const loginReq = { email: "d@jwt.com", password: "a" };
+      const loginRes = {
+        user: {
+          id: 3,
+          name: "Kai Chen",
+          email: "d@jwt.com",
+          roles: [{ role: "diner" }],
+        },
+        token: "abcdef",
+      };
+      expect(route.request().method()).toBe("PUT");
+      expect(route.request().postDataJSON()).toMatchObject(loginReq);
+      await route.fulfill({ json: loginRes });
+    } else if (method === "DELETE") {
+      const logoutRes = { message: "logout successful" };
+      expect(route.request().method()).toBe("DELETE");
+      await route.fulfill({ json: logoutRes });
+    }
   });
 }
 
@@ -138,6 +131,30 @@ export async function mockAdminUser(page) {
   });
 }
 
+export async function mockRegisterEndpoint(page) {
+  await page.route("*/**/api/auth", async (route) => {
+    const registerReq = {
+      name: "Ryan",
+      email: "Ryan@email.com",
+      password: "password",
+    };
+    const registerRes = {
+      user: {
+        id: 3,
+        name: "Ryan",
+        email: "email",
+        roles: [{ role: "diner" }],
+      },
+      token: "abcdef123",
+    };
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject(registerReq);
+    await route.fulfill({ json: registerRes });
+  });
+}
+
+// Mock the order endpoint
+// This is a POST request that creates an order
 export async function mockOrderEndpoint(page) {
   await page.route("*/**/api/order", async (route) => {
     const orderReq = {
@@ -166,24 +183,25 @@ export async function mockOrderEndpoint(page) {
   });
 }
 
-export async function mockRegisterEndpoint(page) {
-  await page.route("*/**/api/auth", async (route) => {
-    const registerReq = {
-      name: "Ryan",
-      email: "Ryan@email.com",
-      password: "password",
-    };
-    const registerRes = {
-      user: {
-        id: 3,
-        name: "Ryan",
-        email: "email",
-        roles: [{ role: "diner" }],
+export async function mockMenuEndpoint(page) {
+  await page.route("*/**/api/order/menu", async (route) => {
+    const menuRes = [
+      {
+        id: 1,
+        title: "Veggie",
+        image: "pizza1.png",
+        price: 0.0038,
+        description: "A garden of delight",
       },
-      token: "abcdef123",
-    };
-    expect(route.request().method()).toBe("POST");
-    expect(route.request().postDataJSON()).toMatchObject(registerReq);
-    await route.fulfill({ json: registerRes });
+      {
+        id: 2,
+        title: "Pepperoni",
+        image: "pizza2.png",
+        price: 0.0042,
+        description: "Spicy treat",
+      },
+    ];
+    expect(route.request().method()).toBe("GET");
+    await route.fulfill({ json: menuRes });
   });
 }
