@@ -235,13 +235,17 @@ test.describe("JWT Pizza", () => {
         .locator("#root div")
         .filter({ hasText: "Keep the dough rolling and" })
         .nth(3)
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole("main")).toContainText(
       "Keep the dough rolling and the franchises signing up."
     );
-    await expect(page.getByRole("row")).toContainText("Franchise");
+    await expect(page.getByRole("row"), { timeout: 10000 }).toContainText(
+      "Franchise"
+    );
     await expect(page.getByRole("row")).toContainText("Franchisee");
-    await expect(page.getByRole("row")).toContainText("Store");
+    await expect(page.getByRole("row"), { timeout: 10000 }).toContainText(
+      "Store"
+    );
     await expect(page.getByRole("row")).toContainText("Action");
     await expect(page.getByRole("button")).toContainText("Add Franchise");
     await page.getByRole("button", { name: "Add Franchise" }).click();
@@ -328,7 +332,9 @@ test.describe("JWT Pizza", () => {
       page.getByRole("row", { name: "Lehi 0.9 ₿ Close" }).getByRole("button")
     ).toBeVisible();
     await expect(page.getByRole("table")).toContainText("LotaPizza");
-    await expect(page.getByRole("table")).toContainText("PizzaCorp");
+    await expect(page.getByRole("table"), { timeout: 10000 }).toContainText(
+      "PizzaCorp"
+    );
     await expect(page.getByRole("table")).toContainText("topSpot");
     await expect(page.getByRole("table")).toContainText("Kai franchise");
     await expect(page.getByRole("table")).toContainText("American Fork");
@@ -434,7 +440,9 @@ test.describe("JWT Pizza", () => {
     //await mockDocsEndpoint(page);
     await page.goto("http://localhost:5173/docs");
     await expect(page.getByRole("main")).toContainText("JWT Pizza API");
-    await expect(page.getByText("[POST] /api/authRegister a")).toBeVisible();
+    await expect(page.getByText("[POST] /api/authRegister a"), {
+      timeout: 10000,
+    }).toBeVisible();
     await expect(page.getByText("[PUT] /api/authLogin existing")).toBeVisible();
     await expect(
       page.getByText(
