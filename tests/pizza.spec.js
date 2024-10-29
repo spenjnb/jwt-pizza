@@ -443,7 +443,7 @@ test.describe("JWT Pizza", () => {
 
   test("test docs", async ({ page }) => {
     //await mockDocsEndpoint(page);
-    await page.goto("http://localhost:5173/docs");
+    await page.goto("https://pizza.byucsprojects.click/docs");
     await expect(page.getByRole("main")).toContainText("JWT Pizza API");
     await expect(page.getByText("[POST] /api/authRegister a"), {
       timeout: 10000,
