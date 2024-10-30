@@ -455,6 +455,7 @@ test.describe("JWT Pizza", () => {
       )
     ).toBeVisible();
     await expect(page.getByText("🔐 [DELETE] /api/authLogout a")).toBeVisible();
+    await expect(page.getByText("🔐 [DELETE] /api/authLogout a")).toBeVisible();
     await expect(page.getByText("[GET] /api/order/menuGet the")).toBeVisible();
     await expect(page.getByText("🔐 [PUT] /api/order/menuAdd")).toBeVisible();
     await expect(page.getByText("🔐 [GET] /api/orderGet the")).toBeVisible();
